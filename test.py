@@ -1,70 +1,172 @@
-n = 4  # there are ten nodes in the example graph (graph is 1-based)
+from Algorithm.Calculate_Distance import *
 
-# dist[i][j] represents the shortest distance to go from i to j
-# this matrix can be calculated for any given graph using 
-# all-pair shortest path algorithms
-dist = [
-    [0, 1, 2, 3],
-    [1, 0, 4, 5],
-    [2, 4, 0, 6],
-    [3, 5, 6, 0]
-]
+class TravellingSalesmanProblem:
+    def __init__(self, distance, start, cities_count):
+        self.distance_matrix = distance
+        self.start_city = start
+        self.total_cities = len(distance)
+        self.cities_count = cities_count
+        
+        self.end_state = (1 << self.total_cities) - 1
+        self.memo = [[None for _col in range(1 << self.total_cities)] for _row in range(self.total_cities)]
 
-# memoization for top-down recursion
-memo = [[[-1] * (1 << (n + 1)) for _ in range(2)] for _ in range(n + 1)]
+        self.shortest_path = []
+        self.min_path_cost = float('inf')
 
-# path to store the optimal path
-path = [[[] for _ in range(1 << (n + 1))] for _ in range(n + 1)]
+    def solve(self):
+        self.__initialize_memo()
+
+        for num_element in range(3, self.total_cities + 1):
+
+            for subset in self.__initiate_combination(num_element):
+
+                if self.__is_not_in_subset(self.start_city, subset):
+                    continue
+
+                for next_city in range(self.total_cities):
+
+                    if next_city == self.start_city or self.__is_not_in_subset(next_city, subset):
+                        continue
+
+                    subset_without_next_city = subset ^ (1 << next_city)
+                    min_distance = float('inf')
+
+                    for last_city in range(self.total_cities):
+                        if last_city == self.start_city or \
+                                last_city == next_city or \
+                                self.__is_not_in_subset(last_city, subset):
+                            continue
+
+                        new_distance = \
+                            self.memo[last_city][subset_without_next_city] + self.distance_matrix[last_city][next_city]
+
+                        if new_distance < min_distance:
+                            min_distance = new_distance
+
+                    self.memo[next_city][subset] = min_distance
+        self.__calculate_min_cost()
+        self.__find_shortest_path()
 
 
-def fun(i, mask, person):
-    # base case
-    # if only the ith bit and 1st bit is set in our mask,
-    # it implies we have visited all other nodes already
-    if mask == ((1 << i) | 3):
-        path[i][mask] = [1, i]
-        return dist[1][i]
+    def __calculate_min_cost(self):
+        for i in range(self.total_cities):
 
-    # memoization
-    if memo[i][person][mask] != -1:
-        return memo[i][person][mask]
+            if i == self.start_city:
+                continue
 
-    res = 10 ** 9  # result of this sub-problem
+            path_cost = self.memo[i][self.end_state]
 
-    # we have to travel all nodes j in mask and end the path at ith node
-    # so for every node j in mask, recursively calculate the cost of
-    # traveling all nodes in mask
-    # except i and then travel back from node j to node i taking
-    # the shortest path, take the minimum of all possible j nodes
-    for j in range(1, n + 1):
-        if (mask & (1 << j)) != 0 and j != i and j != 1:
-            temp_res = fun(j, mask & (~(1 << i)), person) + dist[j][i]
-            if temp_res < res:
-                res = temp_res
-                path[i][mask] = path[j][mask & (~(1 << i))] + [i]
+            if path_cost < self.min_path_cost:
+                self.min_path_cost = path_cost
 
-    memo[i][person][mask] = res  # storing the minimum value
-    return res
+    def __find_shortest_path(self):
+        state = self.end_state
+        for i in range(1, self.cities_count):
+            best_index = -1
+            best_distance = float('inf')
+            for j in range(self.total_cities):
 
+                if j == self.start_city or self.__is_not_in_subset(j, state):
+                    continue
 
-# Driver program to test above logic
-ans = 10 ** 9
-start_city = -1
-start_person = -1
+                new_distance = self.memo[j][state]
+                print(i,j,new_distance)
+                if new_distance <= best_distance:
+                    best_index = j
+                    best_distance = new_distance
+                    print("best:", best_distance)
+                
+            self.shortest_path.append(best_index)
+            state = state ^ (1 << best_index)
+        self.shortest_path.append(self.start_city)
+        self.shortest_path.reverse()
 
-for person in range(2):
-    for i in range(1, n + 1):
-        # try to go from node 1 visiting all nodes in between to i
-        # then return from i taking the shortest route to 1
-        temp_res = fun(i, (1 << (n + 1)) - 1, person)
-        if temp_res < ans:
-            ans = temp_res
+    def __initialize_memo(self):
+        for destination_city in range(self.total_cities):
+
+            if destination_city == self.start_city:
+                continue
+
+            self.memo[destination_city][1 << self.start_city | 1 << destination_city] = \
+                self.distance_matrix[self.start_city][destination_city]
+
+    def __initiate_combination(self, num_element):
+        subset_list = []
+        self.__initialize_combination(0, 0, num_element, self.total_cities, subset_list)
+        return subset_list
+
+    def __initialize_combination(self, subset, at, num_element, total_cities, subset_list):
+
+        elements_left_to_pick = total_cities - at
+        if elements_left_to_pick < num_element:
+            return
+
+        if num_element == 0:
+            subset_list.append(subset)
+        else:
+            for i in range(at, total_cities):
+                subset |= 1 << i
+                self.__initialize_combination(subset, i + 1, num_element - 1, total_cities, subset_list)
+                subset &= ~(1 << i)
+
+    @staticmethod
+    def __is_not_in_subset(element, subset):
+        return ((1 << element) & subset) == 0
+    def optimize_divide_and_conquer(self, path, cost):
+        if len(path) <= 2:
+            return path, cost
+
+        min_sum = float('inf')
+        best_split = None
+
+        for split_point in range(1, len(path)):
+            path1 = path[:split_point]
+            path2 = path[split_point:]
+
+            sum_cost = sum(self.distance_matrix[path1[i]][path1[i + 1]] for i in range(len(path1) - 1)) + \
+                       self.distance_matrix[path1[-1]][path2[0]] + \
+                       sum(self.distance_matrix[path2[i]][path2[i + 1]] for i in range(len(path2) - 1))
+
+            if sum_cost < min_sum:
+                min_sum = sum_cost
+                best_split = (path1, path2)
+
+        if best_split:
+            path1, cost1 = self.optimize_divide_and_conquer(best_split[0], min_sum)
+            path2, cost2 = self.optimize_divide_and_conquer(best_split[1], min_sum)
+
+            return path1 + path2[1:], cost1 + cost2
+
+        return path, cost
+
+def split_shortest_path(path, distance):
+    minimum = 10 ** 9
+    PathA = PathB = []
+    for i in range(1, len(path)):
+        first_path = path[:i]
+        second_path = path[i:]
+        if minimum > calculate_total_distance(first_path, distance) + calculate_total_distance(second_path, distance):
+            minimum = calculate_total_distance(first_path, distance) + calculate_total_distance(second_path, distance)
+            PathA = first_path
+            PathB = second_path
+            
+    return PathA, PathB, minimum
+        
+    
+def dpInit(distance_matrix):
+    n = len(distance_matrix)
+    BestPath = MinimumCost = float('inf')
+    for cities_count in range(4, n//2 - n%2, -1):
+        for i in range(0, 1):
             start_city = i
-            start_person = person
 
-# Display the cost of the most efficient tour
-print("The cost of the most efficient tour =", ans)
-
-# Display the optimal path for both persons
-print("Optimal path for Person 1:", path[start_city][(1 << (n + 1)) - 1])
-print("Optimal path for Person 2:", [x for x in range(1, n + 1) if x not in path[start_city][(1 << (n + 1)) - 1]])
+            tour = TravellingSalesmanProblem(distance_matrix, start_city, cities_count)
+            tour.solve()
+            if MinimumCost > tour.min_path_cost:
+                MinimumCost = tour.min_path_cost
+                BestPath = tour.shortest_path
+            
+    FirstPath, SecondPath, SumCost = split_shortest_path(BestPath, distance_matrix)
+    return FirstPath, SecondPath, SumCost
+    print("Split Shortest paths:", FirstPath, SecondPath)
+    print("Minimum sum of split paths:", SumCost)

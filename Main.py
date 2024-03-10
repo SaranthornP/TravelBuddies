@@ -8,20 +8,19 @@ from Algorithm.Greedy import *
 from Algorithm.Dynamic_Programming import *
 from Algorithm.Branch_and_Bound import *
 
-distances = [
-    [0, 1, 2, 3],
-    [1, 0, 4, 5],
-    [2, 4, 0, 6],
-    [3, 5, 6, 0]
-]
-
-loop = 1
+distances =[
+        [0, 1, 2, 3],
+        [1, 0, 4, 5],
+        [2, 4, 0, 6],
+        [3, 5, 6, 0]
+    ] 
+loop = 100
 
 #Start finding minimum distance path using different algorithm
 print("*"*5, "Starting Calculate", "*"*5, '\n')
 print("[Brute Force]")
-optimal_partition, min_total_distance = find_optimal_partition(distances)
-BF_runtime = timeit.timeit('find_optimal_partition(distances)', globals=globals(), number=loop)
+optimal_partition, min_total_distance = find_min_distance_split(len(distances) ,distances)
+BF_runtime = timeit.timeit('find_min_distance_split(len(distances), distances)', globals=globals(), number=loop)
 print("Path A:", optimal_partition[0], "Min Total Distance:", calculate_total_distance(optimal_partition[0], distances))
 print("Path B:", optimal_partition[1], "Min Total Distance:", calculate_total_distance(optimal_partition[1], distances))
 print("Runtime:", BF_runtime)
@@ -36,14 +35,8 @@ print("Runtime:", GD_runtime)
 
 print("\n"+"*"*30+"\n")
 print("[Dynamic Programming Algorithm]")
-path_a, path_b, min_total_distance = dynamic_partition(distances)
-DA_runtime = timeit.timeit('dynamic_partition(distances)', globals=globals(), number=loop)
-print("Path A:", path_a, "Min Total Distance:", calculate_total_distance(path_a, distances))
-print("Path B:", path_b, "Min Total Distance:", calculate_total_distance(path_b, distances))
+FirstPath, SecondPath, SumCost = dpInit(distances)
+DA_runtime = timeit.timeit('dpInit(distances)', globals=globals(), number=loop)
+print("Split Shortest paths:", FirstPath, SecondPath)
+print("Minimum sum of split paths:", SumCost)
 print("Runtime:", DA_runtime)
-
-path_a, path_b, min_total_distance = branch_and_bound_partition(distances)
-BAB_runtime = timeit.timeit('branch_and_bound_partition(distances)', globals=globals(), number=loop)
-print("Path A:", path_a, "Min Total Distance:", calculate_total_distance(path_a, distances))
-print("Path B:", path_b, "Min Total Distance:", calculate_total_distance(path_b, distances))
-print("Runtime:", BAB_runtime)

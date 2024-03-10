@@ -1,12 +1,9 @@
-from Algorithm.Calculate_Distance import *
-
 class TravellingSalesmanProblem:
-    def __init__(self, distance, start, cities_count):
+    def __init__(self, distance, start):
         self.distance_matrix = distance
         self.start_city = start
         self.total_cities = len(distance)
-        self.cities_count = cities_count
-        
+
         self.end_state = (1 << self.total_cities) - 1
         self.memo = [[None for _col in range(1 << self.total_cities)] for _row in range(self.total_cities)]
 
@@ -32,6 +29,7 @@ class TravellingSalesmanProblem:
                     min_distance = float('inf')
 
                     for last_city in range(self.total_cities):
+
                         if last_city == self.start_city or \
                                 last_city == next_city or \
                                 self.__is_not_in_subset(last_city, subset):
@@ -44,9 +42,9 @@ class TravellingSalesmanProblem:
                             min_distance = new_distance
 
                     self.memo[next_city][subset] = min_distance
+
         self.__calculate_min_cost()
         self.__find_shortest_path()
-
 
     def __calculate_min_cost(self):
         for i in range(self.total_cities):
@@ -61,9 +59,11 @@ class TravellingSalesmanProblem:
 
     def __find_shortest_path(self):
         state = self.end_state
-        for i in range(1, self.cities_count):
+
+        for i in range(1, self.total_cities):
             best_index = -1
             best_distance = float('inf')
+
             for j in range(self.total_cities):
 
                 if j == self.start_city or self.__is_not_in_subset(j, state):
@@ -74,9 +74,10 @@ class TravellingSalesmanProblem:
                 if new_distance <= best_distance:
                     best_index = j
                     best_distance = new_distance
-                
+
             self.shortest_path.append(best_index)
             state = state ^ (1 << best_index)
+
         self.shortest_path.append(self.start_city)
         self.shortest_path.reverse()
 
@@ -111,59 +112,23 @@ class TravellingSalesmanProblem:
     @staticmethod
     def __is_not_in_subset(element, subset):
         return ((1 << element) & subset) == 0
-    def optimize_divide_and_conquer(self, path, cost):
-        if len(path) <= 2:
-            return path, cost
 
-        min_sum = float('inf')
-        best_split = None
 
-        for split_point in range(1, len(path)):
-            path1 = path[:split_point]
-            path2 = path[split_point:]
+if __name__ == '__main__':
+    distance_matrix = [
+        [0, 328, 259, 180, 314, 294, 269, 391],
+        [328, 0, 83, 279, 107, 131, 208, 136],
+        [259, 83, 0, 257, 70, 86, 172, 152],
+        [180, 279, 257, 0, 190, 169, 157, 273],
+        [314, 107, 70, 190, 0, 25, 108, 182],
+        [294, 131, 86, 169, 25, 0, 84, 158],
+        [269, 208, 172, 157, 108, 84, 0, 140],
+        [391, 136, 152, 273, 182, 158, 140, 0],
+    ]
+    start_city = 0
 
-            sum_cost = sum(self.distance_matrix[path1[i]][path1[i + 1]] for i in range(len(path1) - 1)) + \
-                       self.distance_matrix[path1[-1]][path2[0]] + \
-                       sum(self.distance_matrix[path2[i]][path2[i + 1]] for i in range(len(path2) - 1))
+    tour = TravellingSalesmanProblem(distance_matrix, start_city)
+    tour.solve()
 
-            if sum_cost < min_sum:
-                min_sum = sum_cost
-                best_split = (path1, path2)
-
-        if best_split:
-            path1, cost1 = self.optimize_divide_and_conquer(best_split[0], min_sum)
-            path2, cost2 = self.optimize_divide_and_conquer(best_split[1], min_sum)
-
-            return path1 + path2[1:], cost1 + cost2
-
-        return path, cost
-
-def split_shortest_path(path, distance):
-    minimum = 10 ** 9
-    PathA = PathB = []
-    for i in range(1, len(path)):
-        first_path = path[:i]
-        second_path = path[i:]
-        if minimum > calculate_total_distance(first_path, distance) + calculate_total_distance(second_path, distance):
-            minimum = calculate_total_distance(first_path, distance) + calculate_total_distance(second_path, distance)
-            PathA = first_path
-            PathB = second_path
-            
-    return PathA, PathB, minimum
-        
-    
-def dpInit(distance_matrix):
-    n = len(distance_matrix)
-    BestPath = MinimumCost = float('inf')
-    for cities_count in range(4, n//2 - n%2, -1):
-        for i in range(0, 1):
-            start_city = i
-
-            tour = TravellingSalesmanProblem(distance_matrix, start_city, cities_count)
-            tour.solve()
-            if MinimumCost > tour.min_path_cost:
-                MinimumCost = tour.min_path_cost
-                BestPath = tour.shortest_path
-            
-    FirstPath, SecondPath, SumCost = split_shortest_path(BestPath, distance_matrix)
-    return FirstPath, SecondPath, SumCost
+    print("Shortest path :", tour.shortest_path)
+    print("Minimum path cost :", tour.min_path_cost)

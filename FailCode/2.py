@@ -1,5 +1,9 @@
-from Algorithm.Calculate_Distance import *
 from itertools import permutations
+def calculate_total_distance(path, distances):
+    total_distance = 0
+    for i in range(len(path) - 1):
+        total_distance += distances[path[i]][path[i + 1]]
+    return total_distance
 
 def find_min_distance_split(n, distances):
     cities = list(range(n))
@@ -22,3 +26,17 @@ def find_min_distance_split(n, distances):
                 best_split = (A, B)
 
     return best_split, min_total_distance
+
+# Example usage:
+distances =  [
+    [0, 1, 2, 3],
+    [1, 0, 4, 5],
+    [2, 4, 0, 6],
+    [3, 5, 6, 0]
+]
+n = len(distances)
+
+best_split, min_distance = find_min_distance_split(n, distances)
+
+print("Best Split:", best_split)
+print("Minimum Total Distance:", min_distance)
