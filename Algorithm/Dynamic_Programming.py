@@ -1,7 +1,7 @@
 def minTotal(start, mask, distances, memo):
     n = len(distances)
-    
-    # ถ้า mask เป็นเซ็ตที่มีเมืองทั้งหมดแล้ว
+
+#ถ้า mask เป็นเซ็ตที่มีเมืองทั้งหมดแล้ว
     if mask == (1 << n) - 1:
         return distances[start][0]
 
@@ -9,7 +9,7 @@ def minTotal(start, mask, distances, memo):
     if (start, mask) in memo:
         return memo[(start, mask)]
 
-    min_distance = float('inf')
+    mindistance = float('inf')
 
     for next_city in range(n):
         if (mask >> next_city) & 1 == 0:  # ถ้าเมืองนี้ยังไม่ถูกเลือก
@@ -22,29 +22,38 @@ def minTotal(start, mask, distances, memo):
 
 def dynamic_partition(distances):
     n = len(distances)
-    all_cities = set(range(n))
+    dp = [[float('inf')] * (2**n) for i in range(n)]
 
-    # ใช้ memoization เพื่อลดการคำนวณที่ซ้ำซ้อน
-    memo = {}
+    # Base case: cost of visiting no city is 0
+    dp[0][0] = 0
 
-    # เริ่มต้นที่เมือง 0 และเป็นเซ็ตที่ไม่มีเมืองใดเลือกไว้
-    total_distance = minTotal(0, 1, distances, memo)
+    # Fill the dp array
+    for mask in range(1, 2*n):
+        for city in range(n):
+            if mask & (1 << city):
+                prev_mask = mask ^ (1 << city)
+                for prev_city in range(n):
+                    if prev_mask & (1 << prev_city):
+                        dp[city][mask] = min(dp[city][mask], dp[prev_city][prev_mask] + distances[prev_city][city])
 
-    # สร้าง path_a จากการติดตาม memoization
-    path_a = [0]
-    mask = 1
+    # Find the minimum cost and the optimal division
+    min_cost = min(dp[city][-1] for city in range(n))
+    path_a = []
+    path_b = []
+    mask_a = 0
+    for city in range(n):
+        if dp[city][-1] == min_cost:
+            mask_a = (1 << city)
+            break
+    for mask in range(1, 2*n):
+        if dp[0][mask] == min_cost:
+            mask_a = mask
+            break
+    for city in range(n):
+        mask = 1 << city
+        if mask_a & mask:
+            path_a.append(city)
+        else:
+            path_b.append(city)
 
-    while mask != (1 << n) - 1:
-        next_city = None
-        for city in all_cities:
-            if (mask >> city) & 1 == 0 and (next_city is None or distances[path_a[-1]][city] + memo[(city, mask | (1 << city))] < distances[path_a[-1]][next_city] + memo[(next_city, mask | (1 << next_city))]):
-                next_city = city
-        path_a.append(next_city)
-        mask |= (1 << next_city)
-
-    # เพื่อให้ path_a เริ่มต้นและลงท้ายที่เมืองเดียวกัน
-
-    # สร้าง path_b จากเมืองที่ไม่ได้ถูกเลือกไว้ใน path_a
-    path_b = [city for city in all_cities if city not in path_a]
-
-    return path_a, path_b, total_distance
+    return path_a, path_b, min_cost

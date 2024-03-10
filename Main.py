@@ -8,18 +8,14 @@ from Algorithm.Greedy import *
 from Algorithm.Dynamic_Programming import *
 from Algorithm.Branch_and_Bound import *
 
-distances = [[0, 5, 8, 12, 3, 7, 10, 15, 9, 6],
- [5, 0, 4, 9, 13, 6, 11, 8, 14, 10],
- [8, 4, 0, 6, 10, 12, 7, 13, 9, 15],
- [12, 9, 6, 0, 11, 14, 5, 8, 7, 13],
- [3, 13, 10, 11, 0, 8, 14, 9, 6, 7],
- [7, 6, 12, 14, 8, 0, 10, 4, 11, 15],
- [10, 11, 7, 5, 14, 10, 0, 13, 8, 9],
- [15, 8, 13, 8, 9, 4, 13, 0, 12, 6],
- [9, 14, 9, 7, 6, 11, 8, 12, 0, 5],
- [6, 10, 15, 13, 7, 15, 9, 6, 5, 0]]           
+distances = [
+    [0, 1, 2, 3],
+    [1, 0, 4, 5],
+    [2, 4, 0, 6],
+    [3, 5, 6, 0]
+]
 
-loop = 1000
+loop = 1
 
 #Start finding minimum distance path using different algorithm
 print("*"*5, "Starting Calculate", "*"*5, '\n')
